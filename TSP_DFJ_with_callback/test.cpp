@@ -4,17 +4,17 @@
 #include <iostream>
 #include <queue>
 
-ILOSTLBEGIN
+using namespace std;
 
 // Function to find subtours from solution
-std::vector<std::vector<int>> findSubtours(const std::vector<std::vector<double>>& sol, int n) {
-    std::vector<bool> visited(n, false);
-    std::vector<std::vector<int>> subtours;
+vector<vector<int>> findSubtours(const vector<vector<double>>& sol, int n) {
+    vector<bool> visited(n, false);
+    vector<vector<int>> subtours;
 
     for (int i = 0; i < n; i++) {
         if (!visited[i]) {
-            std::vector<int> component;
-            std::queue<int> q;
+            vector<int> component;
+            queue<int> q;
             q.push(i);
             visited[i] = true;
 
@@ -24,7 +24,7 @@ std::vector<std::vector<int>> findSubtours(const std::vector<std::vector<double>
                 component.push_back(u);
 
                 for (int v = 0; v < n; v++) {
-                    if (!visited[v] && sol[u][v] > 0.5) {
+                    if (!visited[v] && sol[u][v] == 1) {
                         visited[v] = true;
                         q.push(v);
                     }
@@ -43,55 +43,11 @@ std::vector<std::vector<int>> findSubtours(const std::vector<std::vector<double>
 static IloArray<IloBoolVarArray> g_x;
 static int g_n;
 
-// Lazy constraint callback using function-based approach
-ILOUSERCUTCALLBACK0(subtourCallback) {
-    try {
-        // Get current solution values
-        std::vector<std::vector<double>> sol(g_n, std::vector<double>(g_n, 0.0));
-
-        for (int i = 0; i < g_n; i++) {
-            for (int j = 0; j < g_n; j++) {
-                if (i != j) {
-                    sol[i][j] = getValue(g_x[i][j]);
-                }
-            }
-        }
-
-        // Find subtours
-        auto subtours = findSubtours(sol, g_n);
-
-        // Add cuts for each subtour that is not a complete tour
-        for (const auto& subtour : subtours) {
-            if ((int)subtour.size() < g_n && (int)subtour.size() >= 2) {
-
-                IloExpr cut(getEnv());
-                for (int i : subtour) {
-                    for (int j : subtour) {
-                        if (i != j) {
-                            cut += g_x[i][j];
-                        }
-                    }
-                }
-
-                // Add the cut: sum of edges in subtour <= |subtour| - 1
-                add(cut <= (int)subtour.size() - 1);
-                cut.end();
-
-                std::cout << "Added cut for subtour of size " << subtour.size() << std::endl;
-            }
-        }
-
-    }
-    catch (IloException& e) {
-        std::cout << "Exception in callback: " << e << std::endl;
-    }
-}
-
 // Lazy constraint callback
 ILOLAZYCONSTRAINTCALLBACK0(lazyCallback) {
     try {
         // Get current integer solution values
-        std::vector<std::vector<double>> sol(g_n, std::vector<double>(g_n, 0.0));
+        vector<vector<double>> sol(g_n, vector<double>(g_n, 0.0));
 
         for (int i = 0; i < g_n; i++) {
             for (int j = 0; j < g_n; j++) {
@@ -125,16 +81,15 @@ ILOLAZYCONSTRAINTCALLBACK0(lazyCallback) {
                     add(cut <= (int)subtour.size() - 1);
                     cut.end();
 
-                    std::cout << "Added lazy constraint for subtour: ";
-                    for (int city : subtour) std::cout << city << " ";
-                    std::cout << "(size: " << subtour.size() << ")" << std::endl;
+                    cout << "Added lazy constraint for subtour: ";
+                    for (int city : subtour) cout << city << " ";
+                    cout << "(size: " << subtour.size() << ")" << endl;
                 }
             }
         }
-
     }
     catch (IloException& e) {
-        std::cout << "Exception in lazy callback: " << e << std::endl;
+        cout << "Exception in lazy callback: " << e << endl;
     }
 }
 
@@ -199,20 +154,19 @@ int main() {
         cplex.setParam(IloCplex::Param::Threads, 1);
 
         // Register callbacks
-        //cplex.use(subtourCallback(env));      // User cuts (optional)
-        cplex.use(lazyCallback(env));         // Lazy constraints (required)
+        cplex.use(lazyCallback(env));       // Lazy constraints (required)
 
-        std::cout << "Solving TSP with DFJ callback method..." << std::endl;
+        cout << "Solving TSP with DFJ callback method..." << endl;
 
         // Solve
         if (cplex.solve()) {
-            std::cout << "\nOptimal solution found!" << std::endl;
-            std::cout << "Optimal cost: " << cplex.getObjValue() << std::endl;
+            cout << "\nOptimal solution found!" << endl;
+            cout << "Optimal cost: " << cplex.getObjValue() << endl;
 
             // Reconstruct tour
-            std::vector<int> tour;
+            vector<int> tour;
             int current = 0;
-            std::vector<bool> visited(n, false);
+            vector<bool> visited(n, false);
 
             tour.push_back(current);
             visited[current] = true;
@@ -228,12 +182,12 @@ int main() {
                 }
             }
 
-            std::cout << "Optimal tour: ";
+            cout << "Optimal tour: ";
             for (size_t i = 0; i < tour.size(); i++) {
-                std::cout << tour[i];
-                if (i < tour.size() - 1) std::cout << " -> ";
+                cout << tour[i];
+                if (i < tour.size() - 1) cout << " -> ";
             }
-            std::cout << " -> " << tour[0] << std::endl;
+            cout << " -> " << tour[0] << endl;
 
             // Verify cost
             double totalCost = 0;
@@ -242,20 +196,18 @@ int main() {
                 int to = tour[(i + 1) % tour.size()];
                 totalCost += dist[from][to];
             }
-            std::cout << "Verified cost: " << totalCost << std::endl;
-
+            cout << "Verified cost: " << totalCost << endl;
         }
         else {
-            std::cout << "No solution found!" << std::endl;
-            std::cout << "Status: " << cplex.getStatus() << std::endl;
+            cout << "No solution found!" << endl;
+            cout << "Status: " << cplex.getStatus() << endl;
         }
-
     }
     catch (IloException& e) {
-        std::cerr << "CPLEX exception: " << e << std::endl;
+        cerr << "CPLEX exception: " << e << endl;
     }
     catch (...) {
-        std::cerr << "Unknown exception" << std::endl;
+        cerr << "Unknown exception" << endl;
     }
 
     env.end();
