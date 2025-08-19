@@ -1,0 +1,34 @@
+# Nội dung file .gitignore cho Visual Studio C++
+
+# Bỏ qua các file cấu hình của user
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Bỏ qua các thư mục build
+[Dd]ebug/
+[Rr]elease/
+x64/
+Win32/
+bin/
+obj/
+ipch/
+
+# Bỏ qua các file thư viện và kết quả build
+*.dll
+*.exe
+*.lib
+*.pdb
+*.obj
+*.ilk
+*.tlog
+
+# Bỏ qua các thư mục và file do VS tạo ra
+.vs/
+*.VC.db
+*.*.vcxproj.filters
+*.vcxproj.user
+
+# Bỏ qua các file của package manager (nếu có)
+packages/
