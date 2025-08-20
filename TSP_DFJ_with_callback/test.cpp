@@ -65,9 +65,9 @@ ILOLAZYCONSTRAINTCALLBACK0(lazyCallback) {
 
         if (!hasValidTour) {
             // Add lazy constraints for each subtour
-            for (const auto& subtour : subtours) {
-                if ((int)subtour.size() >= 2 && (int)subtour.size() < g_n) {
-
+            for (const auto& subtour : subtours) { 
+                if ((int)subtour.size() >= 2 && (int)subtour.size() <= g_n / 2) {    // vì constraints cho S và V\S là tương đương nên chỉ thêm cho S là đủ 
+                                                                                    // S là hợp các subtour thì kiểu gì V\S cũng là hợp các subtour (CM được)
                     IloExpr cut(getEnv());
                     for (int i : subtour) {
                         for (int j : subtour) {
@@ -98,12 +98,12 @@ int main() {
     try {
         int n = 6;
         double dist[6][6] = {
-            {0, 10, 15, 20, 10, 12},
-            {10, 0, 35, 25, 17, 18},
-            {15, 35, 0, 30, 28, 24},
-            {20, 25, 30, 0, 22, 26},
-            {10, 17, 28, 22, 0, 14},
-            {12, 18, 24, 26, 14, 0}
+            {0, 12, 7, 15, 9, 20},
+            {5, 0, 18, 11, 14, 16},
+            {9, 13, 0, 8, 12, 10},
+            {19, 7, 6, 0, 9, 17},
+            {8, 15, 11, 14, 0, 6},
+            {10, 9, 20, 13, 7, 0}
         };
 
         IloModel model(env);
@@ -173,7 +173,7 @@ int main() {
 
             for (int step = 0; step < n - 1; step++) {
                 for (int j = 0; j < n; j++) {
-                    if (!visited[j] && cplex.getValue(x[current][j]) > 0.5) {
+                    if (!visited[j] && cplex.getValue(x[current][j]) == 1) {
                         current = j;
                         tour.push_back(current);
                         visited[current] = true;
